@@ -3,66 +3,83 @@ package utils
 import(
 	"sync"
 	// "errors"
+	"time"
 )
 
+type GMapItem[V any] struct {
+	Value V
+	ExpiresAt time.Time
+}
+
 type GMap[K comparable, V any] struct {
-	mutex sync.RWMutex
-	gMap map[K]V 
+	Mutex sync.RWMutex
+	GMap map[K]GMapItem[V]
 }
 
-func New[K comparable, V any]() *GMap[K, V]{
-	return &GMap[K, V]{gMap: make(map[K]V)}
+func NewGMap[K comparable, V any]() *GMap[K, V]{
+	return &GMap[K, V]{GMap: make(map[K]GMapItem[V])}
 }
 
-func (myGMap *GMap[K, V]) Set(key K, value V) {
-	myGMap.mutex.Lock()
-	defer myGMap.mutex.Unlock()
+func (myGMap *GMap[K, V]) Set(key K, value V, expiresIn time.Duration) {
+	myGMap.Mutex.Lock()
+	defer myGMap.Mutex.Unlock()
 
-	myGMap.gMap[key] = value
+	myGMap.GMap[key] = GMapItem[V]{
+		Value: value,
+		ExpiresAt: time.Now().Add(expiresIn),
+	}
 }
 
 func (myGMap *GMap[K, V]) Delete(key K) {
-	myGMap.mutex.Lock()
-	defer myGMap.mutex.Unlock()
-	delete(myGMap.gMap, key)
+	myGMap.Mutex.Lock()
+	defer myGMap.Mutex.Unlock()
+	delete(myGMap.GMap, key)
 }
 
-func (myGMap *GMap[K, V]) Get(key K) (V , bool) {
-	myGMap.mutex.RLock()
-	defer myGMap.mutex.RUnlock()
-	v, ok := myGMap.gMap[key]
+func (myGMap *GMap[K, V]) Get(key K) (GMapItem[V], bool) {
+	myGMap.Mutex.RLock()
+	defer myGMap.Mutex.RUnlock()
+	item, ok := myGMap.GMap[key]
 
-	return v, ok
+	return item, ok
 }
 
 func (myGMap *GMap[K, V]) Clear() {
-	myGMap.mutex.Lock()
-	defer myGMap.mutex.Unlock()
+	myGMap.Mutex.Lock()
+	defer myGMap.Mutex.Unlock()
 
-	myGMap.gMap = make(map[K]V)
+	myGMap.GMap = make(map[K]GMapItem[V])
 }
 
 func (myGMap *GMap[K, V]) Length() int {
-	myGMap.mutex.RLock()
-	defer myGMap.mutex.RUnlock()
+		myGMap.Mutex.RLock()
+	defer myGMap.Mutex.RUnlock()
 
-	return len(myGMap.gMap)
+	return len(myGMap.GMap)
 }
 
-func (myGMap *GMap[K, V]) GetMultiple(keys []K) map[K]V{
-	myGMap.mutex.RLock()
-	defer myGMap.mutex.RUnlock()
+func (myGMap *GMap[K, V]) GetMultiple(keys []K) map[K]GMapItem[V]{
+	myGMap.Mutex.RLock()
+	defer myGMap.Mutex.RUnlock()
 
-	resultMap := make(map[K]V)
+	resultMap := make(map[K]GMapItem[V])
 	for _, key := range keys {
-		v, ok := myGMap.gMap[key]
+		item, ok := myGMap.GMap[key]
 		if(ok){
-			resultMap[key] = v
+			resultMap[key] = item
 		}
 	}
 	return resultMap
 }
 
-func (myGMap *GMap[K, V]) SetMultiple(){
-	
+func (myGMap *GMap[K, V]) SetMultiple(keys map[K]GMapItem[V])  {
+	myGMap.Mutex.Lock()
+	defer myGMap.Mutex.Unlock()
+
+	for key, item := range keys {
+		myGMap.GMap[key] = GMapItem[V]{
+			Value: item.Value,
+			ExpiresAt: item.ExpiresAt,
+		}
+	}
 }

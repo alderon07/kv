@@ -1,25 +1,25 @@
 package store
 
 import (
-	"kv/pkg/utils"
+	"kv/pkg/gmap"
 	"time"
 )
 
 type KV[K comparable, V any] struct {
-	GMap utils.GMap[K, V]
+	GMap gmap.GMap[K, V]
 }
 
 func New[K comparable, V any](defaultTTL time.Duration, cleanUpInterval time.Duration) *KV[K, V]{
 	if defaultTTL <= 0 {
-		defaultTTL = utils.DEFAULT_TTL
+		defaultTTL = gmap.DEFAULT_TTL
 	}
 
 	if cleanUpInterval <= 0 {
-		cleanUpInterval = utils.DEFAULT_CLEANUP_INTERVAL
+		cleanUpInterval = gmap.DEFAULT_CLEANUP_INTERVAL
 	}
 
 	return &KV[K, V]{
-		GMap: *utils.New[K, V](defaultTTL, cleanUpInterval),
+		GMap: *gmap.New[K, V](defaultTTL, cleanUpInterval),
 	}
 }
 
@@ -40,10 +40,10 @@ func (kv *KV[K, V]) Delete(key K){
 	kv.GMap.Delete(key)
 }
 
-func (kv *KV[K, V]) SetMultiple(keys map[K]utils.GMapItem[V]){
+func (kv *KV[K, V]) SetMultiple(keys map[K]gmap.GMapItem[V]){
 	kv.GMap.SetMultiple(keys)
 }
 
-func (kv *KV[K, V]) GetMultiple(keys []K) map[K]utils.GMapItem[V]{
+func (kv *KV[K, V]) GetMultiple(keys []K) map[K]gmap.GMapItem[V]{
 	return kv.GMap.GetMultiple(keys)
 }

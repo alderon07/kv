@@ -9,7 +9,7 @@ type KV[K comparable, V any] struct {
 	GMap utils.GMap[K, V]
 }
 
-func NewStore[K comparable, V any](defaultTTL time.Duration, cleanUpInterval time.Duration) *KV[K, V]{
+func New[K comparable, V any](defaultTTL time.Duration, cleanUpInterval time.Duration) *KV[K, V]{
 	if defaultTTL >= 0 {
 		defaultTTL = utils.DEFAULT_TTL
 	}

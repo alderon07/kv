@@ -7,5 +7,6 @@ import (
 
 func main(){
 	fmt.Println("kv")
-	store := make(store.KVStore)
+	kvStore := store.NewStore[string, string]()
+	fmt.Printf("KV Store created: %v\n", kvStore)
 }

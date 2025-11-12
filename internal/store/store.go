@@ -5,33 +5,45 @@ import (
 	"time"
 )
 
-type KVStore[K comparable, V any] struct {
-	gMap utils.GMap[K, V]
-	createdAt time.Time
-	// ttl time.Duration
+type KV[K comparable, V any] struct {
+	GMap utils.GMap[K, V]
 }
 
-func (store *KVStore[K, V]) NewKVStore(){
-	store.createdAt = time.Now()
-	store.gMap = *utils.NewGMap[K,V]()
+func NewStore[K comparable, V any](defaultTTL time.Duration, cleanUpInterval time.Duration) *KV[K, V]{
+	if defaultTTL >= 0 {
+		defaultTTL = utils.DEFAULT_TTL
+	}
+
+	if cleanUpInterval >= 0 {
+		cleanUpInterval = utils.DEFAULT_CLEANUP_INTERVAL
+	}
+
+	return &KV[K, V]{
+		GMap: *utils.New[K, V](defaultTTL, cleanUpInterval),
+	}
 }
 
-func (store *KVStore[K, V]) Set(key K, value V){
-	store.gMap.Set(key, value)
+func (kv *KV[K, V]) Set(key K, value V){
+	kv.GMap.Set(key, value)
 }
 
-func (store *KVStore[K, V]) Get(key K) (V, bool){
-	return store.gMap.Get(key)
+func (kv *KV[K, V]) SetWithTTL(key K, value V, expiresIn time.Duration){
+	kv.GMap.SetWithTTL(key, value, expiresIn)
 }
 
-func (store *KVStore[K, V]) Delete(key K){
-	store.gMap.Delete(key)
+func (kv *KV[K, V]) Get(key K) (V, bool){
+	item, ok := kv.GMap.Get(key)
+	return item.Value, ok
 }
 
-func (store *KVStore[K, V]) SetMultiple(keys map[K]V){
-	store.gMap.SetMultiple(keys)
+func (kv *KV[K, V]) Delete(key K){
+	kv.GMap.Delete(key)
 }
 
-func (store *KVStore[K, V]) GetMultiple(keys []K) map[K]V{
-	return store.gMap.GetMultiple(keys)
+func (kv *KV[K, V]) SetMultiple(keys map[K]utils.GMapItem[V]){
+	kv.GMap.SetMultiple(keys)
+}
+
+func (kv *KV[K, V]) GetMultiple(keys []K) map[K]utils.GMapItem[V]{
+	return kv.GMap.GetMultiple(keys)
 }

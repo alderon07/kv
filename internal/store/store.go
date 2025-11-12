@@ -10,11 +10,11 @@ type KV[K comparable, V any] struct {
 }
 
 func New[K comparable, V any](defaultTTL time.Duration, cleanUpInterval time.Duration) *KV[K, V]{
-	if defaultTTL >= 0 {
+	if defaultTTL <= 0 {
 		defaultTTL = utils.DEFAULT_TTL
 	}
 
-	if cleanUpInterval >= 0 {
+	if cleanUpInterval <= 0 {
 		cleanUpInterval = utils.DEFAULT_CLEANUP_INTERVAL
 	}
 

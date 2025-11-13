@@ -1,9 +1,7 @@
 package gmap
 
 import (
-	"kv/pkg/gmap"
 	"sync"
-
 	// "errors"
 	"context"
 	"time"
@@ -47,6 +45,8 @@ func (myGMap *GMap[K, V]) startCleanUp(){
     myGMap.cleanStaleItems()
 
     select {
+      // wait for cleanUp amount of time
+      // When triggered: the case body runs (which is empty), then the loop continues
       case <-time.After(myGMap.CleanUpInterval):
       case <-myGMap.Ctx.Done():
         return
@@ -60,7 +60,7 @@ func (myGMap *GMap[K, V]) findStaleItems() []K {
 
   staleKeys := []K{}
   for key , item := range myGMap.GMap{
-    if(time.Now().After(item.ExpiresAt)){
+    if time.Now().After(item.ExpiresAt) {
       staleKeys = append(staleKeys, key)
     }
   }
@@ -79,6 +79,13 @@ func (myGMap * GMap[K, V]) cleanStaleItems(){
   }
 }
 
+// shutdown method
+// Cancels the context. Signals the cleanup goroutine to stop. Allows graceful termination.
+func (myGMap *GMap[K, V]) Close() {
+  myGMap.Cancel()  // ← Calls the cancel function
+}
+
+// CRUD
 func (myGMap *GMap[K, V]) SetWithTTL(key K, value V, expiresIn time.Duration) {
     myGMap.Mutex.Lock()
     defer myGMap.Mutex.Unlock()

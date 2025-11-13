@@ -1,8 +1,11 @@
 package gmap
 
 import (
+	"kv/pkg/gmap"
 	"sync"
+
 	// "errors"
+	"context"
 	"time"
 )
 
@@ -18,15 +21,62 @@ type GMap[K comparable, V any] struct {
     Mutex sync.RWMutex
     GMap map[K]GMapItem[V]
     DefaultTTL time.Duration
-    cleanupInterval time.Duration
+    CleanUpInterval time.Duration
+    Ctx context.Context
+    Cancel context.CancelFunc
 }
 
-func New[K comparable, V any](defaultTTL time.Duration, cleanupInterval time.Duration) *GMap[K, V]{
-    return &GMap[K, V]{
-        GMap:            make(map[K]GMapItem[V]),
-        DefaultTTL:      defaultTTL,
-        cleanupInterval: cleanupInterval,
+func New[K comparable, V any](defaultTTL time.Duration, cleanUpInterval time.Duration) *GMap[K, V]{
+  ctx, cancel := context.WithCancel(context.Background())
+  var gmap *GMap[K, V] = &GMap[K, V]{
+                          GMap:            make(map[K]GMapItem[V]),
+                          DefaultTTL:      defaultTTL,
+                          CleanUpInterval: cleanUpInterval,
+                          Ctx: ctx,
+                          Cancel: cancel,
+                        }
+  
+
+  go gmap.startCleanUp()
+
+  return gmap
+}
+
+func (myGMap *GMap[K, V]) startCleanUp(){
+  for{
+    myGMap.cleanStaleItems()
+
+    select {
+      case <-time.After(myGMap.CleanUpInterval):
+      case <-myGMap.Ctx.Done():
+        return
     }
+  }
+}
+
+func (myGMap *GMap[K, V]) findStaleItems() []K {
+  myGMap.Mutex.RLock()
+  defer myGMap.Mutex.RUnlock()
+
+  staleKeys := []K{}
+  for key , item := range myGMap.GMap{
+    if(time.Now().After(item.ExpiresAt)){
+      staleKeys = append(staleKeys, key)
+    }
+  }
+
+  return staleKeys
+}
+
+func (myGMap * GMap[K, V]) cleanStaleItems(){
+  staleKeysToRemove := myGMap.findStaleItems()
+  
+  myGMap.Mutex.Lock()
+  defer myGMap.Mutex.Unlock()
+  
+  for _, key := range staleKeysToRemove {
+    delete(myGMap.GMap, key)
+  }
 }
 
 func (myGMap *GMap[K, V]) SetWithTTL(key K, value V, expiresIn time.Duration) {

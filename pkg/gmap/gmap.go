@@ -20,18 +20,34 @@ type GMap[K comparable, V any] struct {
     GMap map[K]GMapItem[V]
     DefaultTTL time.Duration
     CleanUpInterval time.Duration
-    Ctx context.Context
-    Cancel context.CancelFunc
+    ctx context.Context
+    cancel context.CancelFunc
 }
 
-func New[K comparable, V any](defaultTTL time.Duration, cleanUpInterval time.Duration) *GMap[K, V]{
+// New creates a GMap with default TTL and cleanup interval.
+func New[K comparable, V any]() *GMap[K, V] {
+  return NewWithConfig[K, V](DEFAULT_TTL, DEFAULT_CLEANUP_INTERVAL)
+}
+
+// NewWithConfig creates a GMap with the provided TTL and cleanup interval,
+// falling back to defaults when zero or negative values are passed.
+func NewWithConfig[K comparable, V any](defaultTTL time.Duration, cleanUpInterval time.Duration) *GMap[K, V]{
   ctx, cancel := context.WithCancel(context.Background())
+
+  if defaultTTL <= 0 {
+    defaultTTL = DEFAULT_TTL
+  }
+
+  if cleanUpInterval <= 0 {
+    cleanUpInterval = DEFAULT_CLEANUP_INTERVAL
+  }
+  
   var gmap *GMap[K, V] = &GMap[K, V]{
                           GMap:            make(map[K]GMapItem[V]),
                           DefaultTTL:      defaultTTL,
                           CleanUpInterval: cleanUpInterval,
-                          Ctx: ctx,
-                          Cancel: cancel,
+                          ctx: ctx,
+                          cancel: cancel,
                         }
   
 
@@ -48,7 +64,7 @@ func (myGMap *GMap[K, V]) startCleanUp(){
       // wait for cleanUp amount of time
       // When triggered: the case body runs (which is empty), then the loop continues
       case <-time.After(myGMap.CleanUpInterval):
-      case <-myGMap.Ctx.Done():
+      case <-myGMap.ctx.Done():
         return
     }
   }
@@ -82,7 +98,7 @@ func (myGMap * GMap[K, V]) cleanStaleItems(){
 // shutdown method
 // Cancels the context. Signals the cleanup goroutine to stop. Allows graceful termination.
 func (myGMap *GMap[K, V]) Close() {
-  myGMap.Cancel()  // ← Calls the cancel function
+  myGMap.cancel()  // ← Calls the cancel function
 }
 
 // CRUD
@@ -112,10 +128,6 @@ func (myGMap *GMap[K, V]) Get(key K) (GMapItem[V], bool) {
     defer myGMap.Mutex.RUnlock()
     
     item, ok := myGMap.GMap[key]
-    // if(!ok || item.ExpiresAt.Before(time.Now())){
-    // 	delete(myGMap.GMap, key)
-    // 	return GMapItem[V]{}, false
-    // }
     return item, ok
 }
 
@@ -126,7 +138,7 @@ func (myGMap *GMap[K, V]) Clear() {
     myGMap.GMap = make(map[K]GMapItem[V])
 }
 
-func (myGMap *GMap[K, V]) Length() int {
+func (myGMap *GMap[K, V]) Size() int {
     myGMap.Mutex.RLock()
     defer myGMap.Mutex.RUnlock()
 

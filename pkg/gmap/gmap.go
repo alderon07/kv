@@ -61,7 +61,7 @@ func (myGMap *GMap[K, V]) startCleanUp(){
     myGMap.cleanStaleItems()
 
     select {
-      // wait for cleanUp amount of time
+      // wait for interval amount of time
       // When triggered: the case body runs (which is empty), then the loop continues
       case <-time.After(myGMap.CleanUpInterval):
       case <-myGMap.ctx.Done():

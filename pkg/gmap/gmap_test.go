@@ -2,6 +2,7 @@ package gmap
 
 import (
 	"testing"
+	"time"
 )
 
 func TestSet(t *testing.T){
@@ -95,7 +96,9 @@ func TestClear(t *testing.T){
 	kv.Delete("1")
 	kv.Clear()
 
-	if kv.Size() != 0 {
+	expected := 0
+	result := kv.Size()
+	if expected != result {
 		t.Errorf("TestClear CLEAR_DID_NOT_DELETE_ALL_ITEMS")
 	}
 }
@@ -106,8 +109,31 @@ func TestSize(t *testing.T){
 
 	kv.Set("1", "You")
 	kv.Set("2", "Suck")
+	expected := 2
+	result := kv.Size()
+	if expected != result {
+		t.Errorf("TestSize WRONG_SIZE expected: %d result %d", expected, result)
+	}
+}
 
-	if kv.Size() != 2 {
-		t.Errorf("TestSize WRONG_SIZE")
+func TestSetWithTTL(t *testing.T){
+	kv := New[string, string]()
+	defer kv.Close()
+
+	kv.SetWithTTL("1", "You", 2 * time.Second)
+	
+	item, _ := kv.Get("1")
+	result := item.Value
+	expected := "You"
+
+	if expected != result {
+		t.Errorf("TestSetWithTTL expected: %s result %s", expected, result)
+	}
+
+	time.Sleep(2 * time.Second)
+
+	_, ok := kv.Get("1")
+	if !ok {
+		t.Errorf("TestSetWithTTL ITEM_EXISTS_AFTER_TTL_EXPIRATION")
 	}
 }

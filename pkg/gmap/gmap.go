@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const DEFAULT_TTL time.Duration                 = 24 * time.Hour
+const DEFAULT_TTL time.Duration                 = 1 * time.Hour
 const DEFAULT_CLEANUP_INTERVAL time.Duration    = 24 * time.Hour
 
 type GMapItem[V any] struct {

@@ -9,7 +9,7 @@ build:
 	go build -o bin/$(APP_NAME) $(CMD_DIR)
 
 run:
-	go run $(CMD_DIR)
+	go run $(CMD_DIR) $(ARGS)
 
 test:
 	go test ./...

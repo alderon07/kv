@@ -1,6 +1,8 @@
 package gmap
 
 import (
+	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -136,4 +138,78 @@ func TestSetWithTTL(t *testing.T){
 	if !ok {
 		t.Errorf("TestSetWithTTL ITEM_EXISTS_AFTER_TTL_EXPIRATION")
 	}
+}
+
+func TestConcurrentSets(t *testing.T){
+	kv := New[int, string]()
+	
+	var wg sync.WaitGroup
+	count := 100
+	value := "Value:"
+	
+	// spawn go routines to run sets concurrently
+	for i := range count {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			kv.Set(idx, value + strconv.Itoa(idx))
+		}(i)
+	}
+
+	wg.Wait()
+
+	// check if the keys exists
+	for i := range count {
+		item, ok := kv.Get(i)
+		result := item.Value
+		if !ok {
+			t.Errorf("TestConcurrentSets key %d does not exist", i)
+		}
+		
+		expected := value + strconv.Itoa(i)
+		if expected != result {
+			t.Errorf("TestConcurrentSets value %s did not match expected %s for key %d", result, expected, i)
+		}
+	} 
+}
+
+func TestConcurrentGets(t *testing.T){
+	kv := New[int, string]()
+	
+	count := 100
+	value := "Value:"
+	// set key/values
+	for i := range count {
+		kv.Set(i, value + strconv.Itoa(i))
+	}
+	
+	var wg sync.WaitGroup
+	numOfGoroutines := 500
+	// spawn go routines to run gets concurrently
+	for i := range numOfGoroutines {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			
+			key := idx % count
+			
+			item, ok := kv.Get(key)
+			result := item.Value
+			if !ok {
+				t.Errorf("key %d does not exist", key)
+			}
+
+			expected := value + strconv.Itoa(key)
+			if expected != result {
+				t.Errorf("TestConcurrentSets value %s did not match expected %s for key %d", result, expected, key)
+			}
+
+		}(i)
+	}
+
+	wg.Wait()
+}
+
+func TestConcurrentSetGetDelete(t *testing.T){
+	return
 }

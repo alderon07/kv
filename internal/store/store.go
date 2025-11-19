@@ -5,13 +5,16 @@ import (
 	"time"
 )
 
+const DEFAULT_TTL 							= gmap.DEFAULT_TTL
+const DEFAULT_CLEANUP_INTERVAL 	= gmap.DEFAULT_CLEANUP_INTERVAL
+
 type KV[K comparable, V any] struct {
   GMap gmap.GMap[K, V]
 }
 
 // New creates a KV store with default TTL and cleanup interval.
 func New[K comparable, V any]() *KV[K, V]{
-  return NewWithConfig[K, V](0, 0)
+  return NewWithConfig[K, V](DEFAULT_TTL, DEFAULT_CLEANUP_INTERVAL)
 }
 
 // NewWithConfig creates a KV store with the provided TTL and cleanup interval.

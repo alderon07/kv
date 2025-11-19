@@ -11,9 +11,9 @@ import (
 )
 
 func main(){
-	var defaultTTL 			time.Duration	= 1 * time.Hour
-	var defaultCleanup 	time.Duration = 24 * time.Hour
-	
+	var defaultTTL 			time.Duration	= store.DEFAULT_TTL
+	var defaultCleanup 	time.Duration = store.DEFAULT_CLEANUP_INTERVAL
+
 	ttl 		:= flag.Duration("ttl", defaultTTL , "default TTL for keys")
 	cleanup := flag.Duration("cleanup", defaultCleanup , "default cleanup time for expired keys")
 	// port 		:= flag.Int("port", 8080, "port number")

@@ -4,12 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"bufio"
-	"os"
 	"strings"
 	"os"
 	"time"
-	"os/signal"
-	"syscall"
+	// "os/signal"
+	// "syscall"
 
 	"kv/internal/store"
 )
@@ -30,19 +29,19 @@ func main(){
 	fmt.Println("Cleanup:", *cleanup)
 
 	kv := store.NewWithConfig[string, string](*ttl, *cleanup)
-	fmt.Printf("KV Store created: %v\n", kv)
 	defer kv.Close()
-	fmt.Println("KV Store running... Press Ctrl+C to exit")
+
+	startREPL(kv)
     
 	// Wait for interrupt
-	sigChan := make(chan os.Signal, 1)
-	//signal.Notify() - Tells Go's signal package to forward signals to your channel
-	// os.Interrupt - Catches Ctrl+C (SIGINT on Unix, equivalent on Windows)
-	// syscall.SIGTERM - Catches termination signal (commonly sent by kill command or container orchestrators
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	// sigChan := make(chan os.Signal, 1)
+	// //signal.Notify() - Tells Go's signal package to forward signals to your channel
+	// // os.Interrupt - Catches Ctrl+C (SIGINT on Unix, equivalent on Windows)
+	// // syscall.SIGTERM - Catches termination signal (commonly sent by kill command or container orchestrators
+	// signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	
-	// Blocks execution until a signal is received. This is a blocking receive operation on the channel
-	<-sigChan
+	// // Blocks execution until a signal is received. This is a blocking receive operation on the channel
+	// <-sigChan
 	
 	fmt.Println("\nShutting down gracefully...")
 }
@@ -111,13 +110,15 @@ func startREPL(store *store.KV[string,string]){
 				key = parts[1]
 				value = parts[2]
 				store.Set(key, value)
-				fmt.Printf("Set Value %s for Key %s\n", value, key)
+				// fmt.Printf("Set Value %s for Key %s\n", value, key)
 			case "DELETE":
 				key = parts[1]
 				store.Delete(key)
-				fmt.Printf("Delted Key %s\n", key)
+				// fmt.Printf("Delted Key %s\n", key)
 			case "LIST":
-				fmt.Println(store.List())
+				fmt.Print(store.List())
+			case "SIZE":
+				fmt.Printf("%d\n", store.Size())
 			case "EXIT", "QUIT":
 				return
 		}

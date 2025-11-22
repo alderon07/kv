@@ -173,10 +173,9 @@ func (myGMap *GMap[K, V]) SetMultiple(keys map[K]GMapItem[V])  {
 }
 
 func (myGMap *GMap[K, V]) List() string{
-  list := "Key: Value\n"
+  list := ""
   for k, item := range myGMap.GMap {
-    list = fmt.Sprintf("%v: %v", k, item.Value)
+    list += fmt.Sprintf("%v : %v\n", k, item.Value)
   }
-
   return list
 }

@@ -61,3 +61,7 @@ func (kv *KV[K, V]) Size() int {
 func (kv *KV[K, V]) Clear() {
   kv.GMap.Clear()
 }
+
+func (kv *KV[K, V]) List() string {
+  return kv.GMap.List()
+}

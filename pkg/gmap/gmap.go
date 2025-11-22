@@ -1,6 +1,7 @@
 package gmap
 
 import (
+	"fmt"
 	"sync"
 	// "errors"
 	"context"
@@ -169,4 +170,13 @@ func (myGMap *GMap[K, V]) SetMultiple(keys map[K]GMapItem[V])  {
             ExpiresAt: item.ExpiresAt,
         }
     }
+}
+
+func (myGMap *GMap[K, V]) List() string{
+  list := "Key: Value\n"
+  for k, item := range myGMap.GMap {
+    list = fmt.Sprintf("%v: %v", k, item.Value)
+  }
+
+  return list
 }

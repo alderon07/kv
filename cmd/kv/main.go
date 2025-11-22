@@ -70,10 +70,6 @@ func usage() {
 			"2h"    - 2 hours
 			"1h30m" - 1 hour 30 minutes
 			"100ms" - 100 milliseconds`)
-	fmt.Println("STORE CREATED")
-	kv := store.New[string, string]()
-
-	startREPL(kv)
 }
 
 func startREPL(store *store.KV[string,string]){

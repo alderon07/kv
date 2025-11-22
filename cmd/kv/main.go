@@ -107,6 +107,10 @@ func startREPL(store *store.KV[string,string]){
 				}
 				fmt.Println(val)
 			case "SET":
+				if len(parts) < 3 {
+					fmt.Printf("SET <key> <value>\n")
+					break
+				} 
 				key = parts[1]
 				value = parts[2]
 				store.Set(key, value)

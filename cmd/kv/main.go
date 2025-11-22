@@ -99,10 +99,14 @@ func startREPL(store *store.KV[string,string]){
 
 		switch cmd {
 			case "GET":
+				if len(parts) < 2 {
+					fmt.Println("GET <key>")
+					break
+				}
 				key = parts[1]
 				val, exists := store.Get(key)
 				if !exists {
-					fmt.Printf("Key %s Does Not Exist\n", key)
+					fmt.Println("DOES NOT EXIST")
 					break
 				}
 				fmt.Println(val)
@@ -116,6 +120,10 @@ func startREPL(store *store.KV[string,string]){
 				store.Set(key, value)
 				// fmt.Printf("Set Value %s for Key %s\n", value, key)
 			case "DELETE":
+				if len(parts) < 2 {
+					fmt.Printf("DELETE <key>\n")
+					break
+				} 
 				key = parts[1]
 				store.Delete(key)
 				// fmt.Printf("Delted Key %s\n", key)
